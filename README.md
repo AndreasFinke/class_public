@@ -1,3 +1,9 @@
+RT - CLASS 
+===========
+
+This is an work-in-progress implementation of the RT cosmological model in the lastest version of CLASS.
+For a working implementation, see https://github.com/dirian/class_public/tree/nonlocal 
+
 CLASS: Cosmic Linear Anisotropy Solving System  {#mainpage}
 ==============================================
 
