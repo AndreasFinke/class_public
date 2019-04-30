@@ -55,6 +55,18 @@ struct background
 
   double Omega0_lambda; /**< \f$ \Omega_{0_\Lambda} \f$: cosmological constant */
 
+    
+    //**NonLocal: */
+    int model; /* 0 = LCDM, 1 = RT */
+    double gnl;/**gamma*/
+    double Omega0_nlde; /**Nonlocal dark energy density fraction*/
+    //**NonLocal: definition of background initial condition for auxiliary fields*/
+    double U_ini_nlde;
+    double U_prime_ini_nlde;
+    double V_ini_nlde;
+    double V_prime_ini_nlde;
+    
+    
   double Omega0_fld; /**< \f$ \Omega_{0 de} \f$: fluid */
 
   enum equation_of_state fluid_equation_of_state; /**< parametrisation scheme for fluid equation of state */
@@ -179,6 +191,14 @@ struct background
   int index_bg_rho_ur;        /**< relativistic neutrinos/relics density */
   int index_bg_rho_dcdm;      /**< dcdm density */
   int index_bg_rho_dr;        /**< dr density */
+    
+/**NonLocal: auxiliary fields and related energy density and pressure*/
+  int index_bg_U_nlde;
+  int index_bg_U_prime_nlde;
+  int index_bg_V_nlde;
+  int index_bg_V_prime_nlde;
+  int index_bg_rho_nlde;
+  int index_bg_p_nlde;
 
   int index_bg_phi_scf;       /**< scalar field value */
   int index_bg_phi_prime_scf; /**< scalar field derivative wrt conformal time */
@@ -191,6 +211,9 @@ struct background
   int index_bg_rho_ncdm1;     /**< density of first ncdm species (others contiguous) */
   int index_bg_p_ncdm1;       /**< pressure of first ncdm species (others contiguous) */
   int index_bg_pseudo_p_ncdm1;/**< another statistical momentum useful in ncdma approximation */
+
+/**NonLocal: in the nonlocal models, one may need to know the derivative of psi, and in order to do this one needs is to compute the derivative of rho+p for the NCDM component*/    
+  int index_bg_rppdot_ncdm1;
 
   int index_bg_Omega_r;       /**< relativistic density fraction (\f$ \Omega_{\gamma} + \Omega_{\nu r} \f$) */
 
@@ -250,6 +273,14 @@ struct background
   int index_bi_a;       /**< {B} scale factor */
   int index_bi_rho_dcdm;/**< {B} dcdm density */
   int index_bi_rho_dr;  /**< {B} dr density */
+    
+    /**NonLocal*/
+    int index_bi_U_nlde;
+    int index_bi_U_prime_nlde;
+    int index_bi_V_nlde;
+    int index_bi_V_prime_nlde;
+    
+    
   int index_bi_rho_fld; /**< {B} fluid density */
   int index_bi_phi_scf;       /**< {B} scalar field value */
   int index_bi_phi_prime_scf; /**< {B} scalar field derivative wrt conformal time */
@@ -284,6 +315,9 @@ struct background
   short has_fld;       /**< presence of fluid with constant w and cs2? */
   short has_ur;        /**< presence of ultra-relativistic neutrinos/relics? */
   short has_curvature; /**< presence of global spatial curvature? */
+
+/**NonLocal: presence of nonlocal model*/
+  short has_nlde;
 
   //@}
 
@@ -451,6 +485,7 @@ extern "C" {
 			    );
 
 
+/**NonLocal:this function has been modified in order to allow computation of the derivative of rho+p for NCDM*/
   int background_ncdm_momenta(
                              double * qvec,
                              double * wvec,
@@ -459,10 +494,12 @@ extern "C" {
                              double factor,
                              double z,
                              double * n,
-		             double * rho,
+		                     double * rho,
                              double * p,
                              double * drho_dM,
-			     double * pseudo_p
+/**NonLocal:*/                double * rppdot,
+/**NonLocal:*/                double H,
+			                 double * pseudo_p
                              );
 
   int background_ncdm_M_from_Omega(
@@ -572,6 +609,8 @@ extern "C" {
 #define _OMEGAK_BIG_ 0.5     /**< maximal \f$ Omega_k \f$ */
 #define _OMEGAK_SMALL_ -0.5  /**< minimal \f$ Omega_k \f$ */
 
+/**NonLocal: higher bound for recursive method to find the correct value of gamma (executed in background.c)*/
+#define _GNL_HI_ 0.2  /**< maximal acceptable \f$ gnl \f$ */
 //@}
 
 /**
@@ -583,6 +622,10 @@ extern "C" {
 #define _SCALE_BACK_ 0.1  /**< logarithmic step used when searching
 			     for an initial scale factor at which ncdm
 			     are still relativistic */
+
+/**NonLocal: parameters in the recursive algorithm to find the correct value of gamma*/
+#define _TOLH_ 0.00000001  /** tolerance on final H_0*/
+#define _MAXS_ 1000  /** max steps in bisection procedure to find */
 
 #define _PSD_DERIVATIVE_EXP_MIN_ -30 /**< for ncdm, for accurate computation of dlnf0/dlnq, q step is varied in range specified by these parameters */
 #define _PSD_DERIVATIVE_EXP_MAX_ 2  /**< for ncdm, for accurate computation of dlnf0/dlnq, q step is varied in range specified by these parameters */

@@ -514,8 +514,9 @@ int input_read_parameters(
 
   /** - define local variables */
 
-  int flag1,flag2,flag3;
-  double param1,param2,param3;
+/**NonLocal:added flag4 and param4 to read Omega_nlde*/
+  int flag1,flag2,flag3,flag4;
+  double param1,param2,param3,param4;
   int N_ncdm=0,n,entries_read;
   int int1,fileentries;
   double scf_lambda;
@@ -599,7 +600,17 @@ int input_read_parameters(
 
   /** (a) background parameters */
 
-  /** - scale factor today (arbitrary) */
+/**NonLocal: auxiliary fields initial conditions*/
+  pba->U_ini_nlde = 0.;
+  pba->U_prime_ini_nlde = 0.;
+  pba->V_ini_nlde = 0.;
+  pba->U_prime_ini_nlde = 0.;
+/**NonLocal: read model flag: 0 -> LCDM, 1 -> RT */
+  class_read_double("model",pba->model);
+  if (pba->model != 0)
+      pba->has_nlde = _TRUE_;
+
+  /* scale factor today (arbitrary) */
   class_read_double("a_today",pba->a_today);
 
   /** - h (dimensionless) and [\f$ H_0/c\f$] in \f$ Mpc^{-1} = h / 2997.9... = h * 10^5 / c \f$ */
@@ -901,7 +912,7 @@ int input_read_parameters(
       if (pba->m_ncdm_in_eV[n] != 0.0){
         /* Case of only mass or mass and Omega/omega: */
         pba->M_ncdm[n] = pba->m_ncdm_in_eV[n]/_k_B_*_eV_/pba->T_ncdm[n]/pba->T_cmb;
-        class_call(background_ncdm_momenta(pba->q_ncdm_bg[n],
+        class_call(background_ncdm_momenta(pba->q_ncdm_bg[n],/**NonLocal: modified function: see background.h*/
                                            pba->w_ncdm_bg[n],
                                            pba->q_size_ncdm_bg[n],
                                            pba->M_ncdm[n],
@@ -911,6 +922,8 @@ int input_read_parameters(
                                            &rho_ncdm,
                                            NULL,
                                            NULL,
+                                           NULL,/**NonLocal*/
+                                           0.,/**NonLocal*/
                                            NULL),
                    pba->error_message,
                    errmsg);
@@ -949,8 +962,8 @@ int input_read_parameters(
   if (pba->K > 0.) pba->sgnK = 1;
   else if (pba->K < 0.) pba->sgnK = -1;
 
-  /** - Omega_0_lambda (cosmological constant), Omega0_fld (dark energy fluid), Omega0_scf (scalar field) */
-
+  /* Omega_0_lambda (cosmological constant), Omega0_fld (dark energy fluid),
+     Omega0_scf (scalar field), Omega0_nlde (dark energy from nonlocal models) */
   class_call(parser_read_double(pfc,"Omega_Lambda",&param1,&flag1,errmsg),
              errmsg,
              errmsg);
@@ -960,8 +973,46 @@ int input_read_parameters(
   class_call(parser_read_double(pfc,"Omega_scf",&param3,&flag3,errmsg),
              errmsg,
              errmsg);
+/**NonLocal*/
+  class_call(parser_read_double(pfc,"Omega_nlde",&param4,&flag4,errmsg),
+             errmsg,
+             errmsg);
 
-  class_test((flag1 == _TRUE_) && (flag2 == _TRUE_) && ((flag3 == _FALSE_) || (param3 >= 0.)),
+/**NonLocal: modified procedure in the presence of nonlocal dark energy*/
+  if(!(pba->model == 0.)){
+      if((flag1 == _TRUE_) && (flag4 == _TRUE_)){/**NonLocal DE and cosmological constant specified then one infers Omega_cdm (useful for model comparison in MCMC), DE fluid and scalar field put to zero*/
+            pba->Omega0_k = 0.;
+            pba->K = 0.;
+            pba->sgnK = 0.;
+            pba->Omega0_fld= 0.;
+            pba->Omega0_scf= 0.;
+            pba->Omega0_lambda= param1;
+            pba->Omega0_nlde = param4;
+            pba->Omega0_cdm =  1. - Omega_tot - param1 - param4; /**NonLocal: fill with Omega0_cdm */
+            class_test(pba->Omega0_cdm < 0.,
+                     errmsg,
+                     "Omega_cdm derived negative.");/**NonLocal: check for positivity of Omega0_cdm for safe background computation*/
+      }
+      if((flag1 == _TRUE_) && (flag4 == _FALSE_)){/**NonLocal DE mixed with just the cosmological constant specified: nonlocal DE will be derived form flatness condition, while DE fluid and scalar field are put to zero*/
+            pba->Omega0_k = 0.;
+            pba->K = 0.;
+            pba->sgnK = 0.;
+            pba->Omega0_fld= 0.;
+            pba->Omega0_scf= 0.;
+            pba->Omega0_lambda= param1;
+            pba->Omega0_nlde = 1.- Omega_tot - param1;
+      }
+      else if((flag1 == _FALSE_) && (flag4 == _FALSE_)){/**NonLocal: pure nonlocal DE and no cosmological constant, DE fluid and scalar field put to zero*/
+	pba->Omega0_k = 0.;
+	pba->K = 0.;
+	pba->sgnK = 0.;
+	pba->Omega0_fld= 0.;
+	pba->Omega0_scf= 0.;
+	pba->Omega0_nlde = 1.- Omega_tot;
+      }
+  }
+  else{
+      class_test((flag1 == _TRUE_) && (flag2 == _TRUE_) && ((flag3 == _FALSE_) || (param3 >= 0.)),
              errmsg,
              "In input file, either Omega_Lambda or Omega_fld must be left unspecified, except if Omega_scf is set and <0.0, in which case the contribution from the scalar field will be the free parameter.");
 
@@ -1115,6 +1166,7 @@ int input_read_parameters(
       }
     }
   }
+}
 
   /** (b) assign values to thermodynamics cosmological parameters */
 
@@ -2950,7 +3002,7 @@ int input_default_params(
   pba->Omega0_g = (4.*sigma_B/_c_*pow(pba->T_cmb,4.)) / (3.*_c_*_c_*1.e10*pba->h*pba->h/_Mpc_over_m_/_Mpc_over_m_/8./_PI_/_G_);
   pba->Omega0_ur = 3.046*7./8.*pow(4./11.,4./3.)*pba->Omega0_g;
   pba->Omega0_b = 0.022032/pow(pba->h,2);
-  pba->Omega0_cdm = 0.12038/pow(pba->h,2);
+  pba->Omega0_cdm = 0.; //NonLocal: Om_cdm set to zero by default. Useful for model comparison where Om_cdm is unspecified, and then derived by the filling condition.
   pba->Omega0_dcdmdr = 0.0;
   pba->Omega0_dcdm = 0.0;
   pba->Gamma_dcdm = 0.0;
@@ -2977,7 +3029,9 @@ int input_default_params(
   pba->Omega0_k = 0.;
   pba->K = 0.;
   pba->sgnK = 0;
-  pba->Omega0_lambda = 1.-pba->Omega0_k-pba->Omega0_g-pba->Omega0_ur-pba->Omega0_b-pba->Omega0_cdm-pba->Omega0_ncdm_tot-pba->Omega0_dcdmdr;
+/**NonLocal: Omega_Lambda is now an independent variable, so the following line is replaced by the one below;
+    pba->Omega0_lambda = 1.-pba->Omega0_k-pba->Omega0_g-pba->Omega0_ur-pba->Omega0_b-pba->Omega0_cdm-pba->Omega0_ncdm_tot-pba->Omega0_dcdmdr;*/
+  pba->Omega0_lambda = 0.;
   pba->Omega0_fld = 0.;
   pba->a_today = 1.;
   pba->use_ppf = _TRUE_;
