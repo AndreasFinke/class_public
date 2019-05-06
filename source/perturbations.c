@@ -148,6 +148,11 @@ int perturb_init(
       printf("Computing sources\n");
   }
 
+    
+  /**NonLocal*/
+  class_test((ppt->gauge == synchronous) && (pba->has_nlde == _TRUE_), ppt->error_message,
+               "Nonlocal perturbations not implemented in synchronous gauge. Use newtonian gauge.");
+
   class_test((ppt->gauge == synchronous) && (pba->has_cdm == _FALSE_),
              ppt->error_message,
              "In the synchronous gauge, it is not self-consistent to assume no CDM: the later is used to define the initial timelike hypersurface. You can either add a negligible amount of CDM or switch to newtonian gauge");
@@ -2549,6 +2554,10 @@ int perturb_prepare_output(struct background * pba,
       class_store_columntitle(ppt->scalar_titles, "delta_dr", pba->has_dr);
       class_store_columntitle(ppt->scalar_titles, "theta_dr", pba->has_dr);
       class_store_columntitle(ppt->scalar_titles, "shear_dr", pba->has_dr);
+/**NonLocal*/
+      class_store_columntitle(ppt->scalar_titles,"dU_nlde",pba->has_nlde);
+      class_store_columntitle(ppt->scalar_titles,"dV_nlde",pba->has_nlde);
+      if(pba->model == 2.) class_store_columntitle(ppt->scalar_titles,"dZ_nlde",pba->has_nlde);
       /* Scalar field scf */
       class_store_columntitle(ppt->scalar_titles, "delta_scf", pba->has_scf);
       class_store_columntitle(ppt->scalar_titles, "theta_scf", pba->has_scf);
@@ -3116,6 +3125,18 @@ int perturb_vector_init(
       class_define_index(ppv->index_pt_Gamma_fld,pba->has_fld,index_pt,1); /* Gamma variable of PPF scheme */
     }
 
+    /**NonLocal*/
+    if (pba->has_nlde == _TRUE_){
+      class_define_index(ppv->index_pt_deltaU_nlde,pba->has_nlde,index_pt,1);
+      class_define_index(ppv->index_pt_deltaU_prime_nlde,pba->has_nlde,index_pt,1);
+      class_define_index(ppv->index_pt_deltaV_nlde,pba->has_nlde,index_pt,1);
+      class_define_index(ppv->index_pt_deltaV_prime_nlde,pba->has_nlde,index_pt,1);
+      if(pba->model == RT){
+         class_define_index(ppv->index_pt_deltaZ_nlde,pba->has_nlde,index_pt,1);
+         class_define_index(ppv->index_pt_deltaZ_prime_nlde,pba->has_nlde,index_pt,1);
+      }
+    }
+
     /* scalar field */
 
     class_define_index(ppv->index_pt_phi_scf,pba->has_scf,index_pt,1); /* scalar field density */
@@ -3516,18 +3537,43 @@ int perturb_vector_init(
 
       if (pba->has_fld == _TRUE_) {
 
-        if (pba->use_ppf == _FALSE_) {
-          ppv->y[ppv->index_pt_delta_fld] =
-            ppw->pv->y[ppw->pv->index_pt_delta_fld];
-
-          ppv->y[ppv->index_pt_theta_fld] =
-            ppw->pv->y[ppw->pv->index_pt_theta_fld];
-        }
-        else {
-          ppv->y[ppv->index_pt_Gamma_fld] =
-            ppw->pv->y[ppw->pv->index_pt_Gamma_fld];
-        }
+          if (pba->use_ppf == _FALSE_) {
+              ppv->y[ppv->index_pt_delta_fld] =
+              ppw->pv->y[ppw->pv->index_pt_delta_fld];
+              
+              ppv->y[ppv->index_pt_theta_fld] =
+              ppw->pv->y[ppw->pv->index_pt_theta_fld];
+          }
+          else {
+              ppv->y[ppv->index_pt_Gamma_fld] =
+              ppw->pv->y[ppw->pv->index_pt_Gamma_fld];
+          }
       }
+        
+        
+/**NonLocal*/
+      if (pba->has_nlde == _TRUE_) {
+          
+          ppv->y[ppv->index_pt_deltaU_nlde] =
+          ppw->pv->y[ppw->pv->index_pt_deltaU_nlde];
+            
+          ppv->y[ppv->index_pt_deltaU_prime_nlde] =
+          ppw->pv->y[ppw->pv->index_pt_deltaU_prime_nlde];
+            
+          ppv->y[ppv->index_pt_deltaV_nlde] =
+          ppw->pv->y[ppw->pv->index_pt_deltaV_nlde];
+            
+          ppv->y[ppv->index_pt_deltaV_prime_nlde] =
+          ppw->pv->y[ppw->pv->index_pt_deltaV_prime_nlde];
+            
+          if(pba->model == RT){
+              ppv->y[ppv->index_pt_deltaZ_nlde] =
+              ppw->pv->y[ppw->pv->index_pt_deltaZ_nlde];
+              ppv->y[ppv->index_pt_deltaZ_prime_nlde] =
+              ppw->pv->y[ppw->pv->index_pt_deltaZ_prime_nlde];
+          }
+      }
+
 
       if (pba->has_scf == _TRUE_) {
 
@@ -4494,6 +4540,19 @@ int perturb_initial_conditions(struct precision * ppr,
            -a*a* dV_scf(pba,ppw->pvecback[pba->index_bg_phi_scf])*alpha
            +ppw->pvecback[pba->index_bg_phi_prime_scf]*alpha_prime);
       }
+        
+/**NonLocal*/
+      if (pba->has_nlde == _TRUE_) {
+          ppw->pv->y[ppw->pv->index_pt_deltaU_nlde] = 0.;
+          ppw->pv->y[ppw->pv->index_pt_deltaU_prime_nlde] = 0.;
+          ppw->pv->y[ppw->pv->index_pt_deltaV_nlde] = 0.;
+          ppw->pv->y[ppw->pv->index_pt_deltaV_prime_nlde] = 0.;
+          if(pba->model == RT){
+              ppw->pv->y[ppw->pv->index_pt_deltaZ_nlde] = 0.;
+              ppw->pv->y[ppw->pv->index_pt_deltaZ_prime_nlde] = 0.;
+          }
+            
+      }
 
       if ((pba->has_ur == _TRUE_) || (pba->has_ncdm == _TRUE_) || (pba->has_dr == _TRUE_)) {
 
@@ -5160,11 +5219,22 @@ int perturb_einstein(
          y[ppw->pv->index_pt_phi], which derivative is given by the
          second equation below (credits to Guido Walter Pettinari). */
 
+/**NonLocal* modified einstein equations 0i and ij offd*/
+      if (pba->model == 0.){
       /* equation for psi */
       ppw->pvecmetric[ppw->index_mt_psi] = y[ppw->pv->index_pt_phi] - 4.5 * (a2/k2) * ppw->rho_plus_p_shear;
 
       /* equation for phi' */
       ppw->pvecmetric[ppw->index_mt_phi_prime] = -a_prime_over_a * ppw->pvecmetric[ppw->index_mt_psi] + 1.5 * (a2/k2) * ppw->rho_plus_p_theta;
+      }
+      else if (pba->model == RT){
+          /* equation for psi */
+          ppw->pvecmetric[ppw->index_mt_psi] = y[ppw->pv->index_pt_phi] +3.*(pba->gnl)*y[ppw->pv->index_pt_deltaZ_nlde]*(pba->H0)*(pba->H0)- 4.5 * (a2/k2) * ppw->rho_plus_p_shear;
+          
+          /* equation for phi' */
+          ppw->pvecmetric[ppw->index_mt_phi_prime] = -a_prime_over_a * ppw->pvecmetric[ppw->index_mt_psi] + 1.5 * (a2/k2) * ppw->rho_plus_p_theta+3.*(pba->gnl)*(a_prime_over_a*y[ppw->pv->index_pt_deltaZ_nlde]-y[ppw->pv->index_pt_deltaZ_prime_nlde]/2.+(ppw->pvecback[pba->index_bg_V_nlde])*(ppw->pvecmetric[ppw->index_mt_psi])/2.-y[ppw->pv->index_pt_deltaV_nlde]/2.)*(pba->H0)*(pba->H0)/2.;
+      }
+
 
       /* eventually, infer radiation streaming approximation for
          gamma and ur (this is exactly the right place to do it
@@ -5300,10 +5370,14 @@ int perturb_einstein(
 
   if (_tensors_) {
 
-    /* single einstein equation for tensor perturbations */
-    ppw->pvecmetric[ppw->index_mt_gw_prime_prime] = -2.*a_prime_over_a*y[ppw->pv->index_pt_gwdot]-(k2+2.*pba->K)*y[ppw->pv->index_pt_gw]+ppw->gw_source;
-
-  }
+      /* single einstein equation for tensor perturbations */
+      
+      /**NonLocal*/
+      if (pba->model == LCDM)
+          ppw->pvecmetric[ppw->index_mt_gw_prime_prime] = -2.*a_prime_over_a*y[ppw->pv->index_pt_gwdot]-(k2+2.*pba->K)*y[ppw->pv->index_pt_gw]+ppw->gw_source;
+      else if (pba->model == RT)
+          ppw->pvecmetric[ppw->index_mt_gw_prime_prime] = (-2.*a_prime_over_a+3.*(pba->H0)*(pba->H0)*(pba->gnl)*(ppw->pvecback[pba->index_bg_V_nlde]))*y[ppw->pv->index_pt_gwdot]-k2*y[ppw->pv->index_pt_gw]+ppw->gw_source;      }
+  
 
   return _SUCCESS_;
 
@@ -6361,6 +6435,7 @@ int perturb_print_variables(double tau,
   double delta_dcdm=0.,theta_dcdm=0.;
   double delta_dr=0.,theta_dr=0.,shear_dr=0., f_dr=1.0;
   double delta_ur=0.,theta_ur=0.,shear_ur=0.,l4_ur=0.;
+/**NonLocal*/  double dU_nlde=0.,dV_nlde=0,dZ_nlde=0.;
   double delta_rho_scf=0., rho_plus_p_theta_scf=0.;
   double delta_scf=0., theta_scf=0.;
   /** - ncdm sector begins */
@@ -6603,6 +6678,13 @@ int perturb_print_variables(double tau,
       theta_dr = y[ppw->pv->index_pt_F0_dr+1]*3./4.*k/f_dr;
       shear_dr = y[ppw->pv->index_pt_F0_dr+2]*0.5/f_dr;
     }
+      
+/**NonLocal*/
+    if (pba->has_nlde == _TRUE_) {
+        dU_nlde = y[ppw->pv->index_pt_deltaU_nlde];
+        dV_nlde = y[ppw->pv->index_pt_deltaV_nlde];
+        if(pba->model == RT) dZ_nlde = y[ppw->pv->index_pt_deltaZ_nlde];
+    }
 
     if (pba->has_scf == _TRUE_){
       if (ppt->gauge == synchronous){
@@ -6726,6 +6808,10 @@ int perturb_print_variables(double tau,
     class_store_double(dataptr, delta_dr, pba->has_dr, storeidx);
     class_store_double(dataptr, theta_dr, pba->has_dr, storeidx);
     class_store_double(dataptr, shear_dr, pba->has_dr, storeidx);
+/**NonLocal*/
+    class_store_double(dataptr, dU_nlde, pba->has_nlde, storeidx);
+    class_store_double(dataptr, dV_nlde, pba->has_nlde, storeidx);
+    if(pba->model == RT) class_store_double(dataptr, dZ_nlde, pba->has_nlde, storeidx);
     /* Scalar field scf*/
     class_store_double(dataptr, delta_scf, pba->has_scf, storeidx);
     class_store_double(dataptr, theta_scf, pba->has_scf, storeidx);
@@ -6949,6 +7035,8 @@ int perturb_derivs(double tau,
 
   /* for use with dcdm and dr */
   double f_dr, fprime_dr;
+    
+/**NonLocal*/ double U=0.,V=0.,Uprime=0.,Vprime=0.,phiprimeprime=0.,psiprime=0.,rhopluspsigmaprime=0.,gnl=0.;
 
   /** - rename the fields of the input structure (just to avoid heavy notations) */
 
@@ -7009,6 +7097,13 @@ int perturb_derivs(double tau,
   a2 = a*a;
   a_prime_over_a = pvecback[pba->index_bg_H] * a;
   R = 4./3. * pvecback[pba->index_bg_rho_g]/pvecback[pba->index_bg_rho_b];
+    
+/**NonLocal*/
+  U=pvecback[pba->index_bg_U_nlde];
+  Uprime=pvecback[pba->index_bg_U_prime_nlde];
+  V=pvecback[pba->index_bg_V_nlde];
+  Vprime=pvecback[pba->index_bg_V_prime_nlde];
+  gnl=pba->gnl;
 
   /** - Compute 'generalised cotK function of argument \f$ \sqrt{|K|}*\tau \f$, for closing hierarchy.
       (see equation 2.34 in arXiv:1305.3261): */
@@ -7184,6 +7279,9 @@ int perturb_derivs(double tau,
           0.5*(8./15.*(theta_g+metric_shear)
                -3./5.*k*s_l[3]/s_l[2]*y[pv->index_pt_l3_g]
                -pvecthermo[pth->index_th_dkappa]*(2.*y[pv->index_pt_shear_g]-4./5./s_l[2]*P0));
+          
+/**NonLocal*/
+        rhopluspsigmaprime+=(0.5*(8./15.*(theta_g+metric_shear)-3./5.*k*s_l[3]/s_l[2]*y[pv->index_pt_l3_g]-pvecthermo[pth->index_th_dkappa]*(2.*y[pv->index_pt_shear_g]-4./5./s_l[2]*P0)))*4.*pvecback[pba->index_bg_rho_g]/3.-16.*y[pv->index_pt_shear_g]*pvecback[pba->index_bg_rho_g]*a_prime_over_a/3.;
 
         /** - -----> photon temperature l=3 */
 
@@ -7422,6 +7520,9 @@ int perturb_derivs(double tau,
                  8./15.*(y[pv->index_pt_theta_ur]+metric_shear)-3./5.*k*s_l[3]/s_l[2]*y[pv->index_pt_shear_ur+1]
                  // non-standard term, non-zero if cvis2_ur not 1/3
                  -(1.-ppt->three_cvis2_ur)*(8./15.*(y[pv->index_pt_theta_ur]+metric_shear)));
+            
+        /**NonLocal*/
+            rhopluspsigmaprime+=(0.5*(8./15.*(y[pv->index_pt_theta_ur]+metric_shear)-3./5.*k*s_l[3]/s_l[2]*y[pv->index_pt_shear_ur+1]))*4.*pvecback[pba->index_bg_rho_ur]/3.-16.*y[pv->index_pt_shear_ur]*pvecback[pba->index_bg_rho_ur]*a_prime_over_a/3.;
 
           /** - -----> exact ur l=3 */
           l = 3;
@@ -7451,6 +7552,10 @@ int perturb_derivs(double tau,
             dy[pv->index_pt_shear_ur] =
               -3./tau*y[pv->index_pt_shear_ur]
               +2./3.*(y[pv->index_pt_theta_ur]+metric_shear);
+              
+/**NonLocal*/
+            rhopluspsigmaprime+=(-3./tau*y[pv->index_pt_shear_ur]+2./3.*(y[pv->index_pt_theta_ur]+metric_shear))*4.*pvecback[pba->index_bg_rho_ur]/3.
+              -16.*y[pv->index_pt_shear_ur]*pvecback[pba->index_bg_rho_ur]*a_prime_over_a/3.;
 
           }
 
@@ -7460,6 +7565,10 @@ int perturb_derivs(double tau,
             dy[pv->index_pt_shear_ur] =
               -3.*a_prime_over_a*y[pv->index_pt_shear_ur]
               +2./3.*(y[pv->index_pt_theta_ur]+metric_shear);
+/**NonLocal*/
+            rhopluspsigmaprime+=(-3.*a_prime_over_a*y[pv->index_pt_shear_ur]+2./3.*(y[pv->index_pt_theta_ur]+metric_shear))*4.*pvecback[pba->index_bg_rho_ur]/3.
+            -16.*y[pv->index_pt_shear_ur]*pvecback[pba->index_bg_rho_ur]*a_prime_over_a/3.;
+
 
           }
 
@@ -7469,6 +7578,9 @@ int perturb_derivs(double tau,
             dy[pv->index_pt_shear_ur] =
               -3./tau*y[pv->index_pt_shear_ur]
               +2./3.*(y[pv->index_pt_theta_ur]+metric_ufa_class);
+/**NonLocal*/
+            rhopluspsigmaprime+=(-3./tau*y[pv->index_pt_shear_ur]+2./3.*(y[pv->index_pt_theta_ur]+metric_ufa_class))*4.*pvecback[pba->index_bg_rho_ur]/3.
+            -16.*y[pv->index_pt_shear_ur]*pvecback[pba->index_bg_rho_ur]*a_prime_over_a/3.;
 
           }
         }
@@ -7550,6 +7662,9 @@ int perturb_derivs(double tau,
               +8.0/3.0*cvis2_ncdm/(1.0+w_ncdm)*s_l[2]*(y[idx+1]+metric_ufa_class);
 
           }
+            
+/**NonLocal*/
+          rhopluspsigmaprime+=pvecback[pba->index_bg_rppdot_ncdm1+n_ncdm]*y[idx+2]+(rho_ncdm_bg+p_ncdm_bg)*dy[idx+2];
 
           /** - -----> jump to next species */
 
@@ -7600,6 +7715,9 @@ int perturb_derivs(double tau,
                 but with curvature taken into account a la arXiv:1305.3261 */
 
             dy[idx+l] = qk_div_epsilon*y[idx+l-1]-(1.+l)*k*cotKgen*y[idx+l];
+              
+/**NonLocal*/
+            rhopluspsigmaprime += 2.0/3.0*(pba->factor_ncdm[n_ncdm])*pow(pba->a_today/a,4)*q*q*q*q/epsilon*(pba->w_ncdm[n_ncdm][index_q])*((-4.*a_prime_over_a-a2*a_prime_over_a*(pba->M_ncdm[n_ncdm])*(pba->M_ncdm[n_ncdm])/epsilon/epsilon)*y[idx+2]+qk_div_epsilon/5.0*(2*s_l[2]*y[idx+1]-3.*s_l[3]*y[idx+3])-s_l[2]*metric_shear*2./15.*dlnf0_dlnq);
 
             /** - -----> jump to next momentum bin or species */
 
@@ -7608,6 +7726,20 @@ int perturb_derivs(double tau,
         }
       }
     }
+      
+/**NonLocal*/
+      
+     if (pba->model == RT) {
+          psiprime=-metric_continuity/3.-9.*a_prime_over_a*a2*(ppw->rho_plus_p_shear)/k2-4.5*a2*rhopluspsigmaprime/k2+3.*gnl*y[pv->index_pt_deltaZ_prime_nlde]*(pba->H0)*(pba->H0);
+          phiprimeprime=-(metric_euler*(3.*a_prime_over_a*a_prime_over_a+2.*a*pvecback[pba->index_bg_H_prime])/k2+a_prime_over_a*(-2.*metric_continuity/3.+psiprime)-(metric_euler-k2*y[pv->index_pt_phi])/3.+3.*(gnl*(a2*y[pv->index_pt_deltaU_nlde]+metric_euler*a_prime_over_a*V/k2-a_prime_over_a*y[pv->index_pt_deltaV_nlde]-metric_continuity*V/3.-k2*y[pv->index_pt_deltaZ_nlde]/3.)*(pba->H0)*(pba->H0)-a2*(ppw->delta_p))/2.);
+          dy[pv->index_pt_deltaU_nlde]=y[pv->index_pt_deltaU_prime_nlde];
+          dy[pv->index_pt_deltaU_prime_nlde]=-2.*a_prime_over_a*y[pv->index_pt_deltaU_prime_nlde]-k2*y[pv->index_pt_deltaU_nlde]+(-metric_continuity+psiprime)*(Uprime-6.*a_prime_over_a)-6*phiprimeprime+2.*(metric_euler-2.*k2*y[pv->index_pt_phi]);
+          dy[pv->index_pt_deltaZ_nlde]=y[pv->index_pt_deltaZ_prime_nlde];
+          dy[pv->index_pt_deltaZ_prime_nlde]=2.*(3.*a_prime_over_a*a_prime_over_a+a*pvecback[pba->index_bg_H_prime]-k2)*y[pv->index_pt_deltaZ_nlde]-4.*a_prime_over_a*y[pv->index_pt_deltaV_nlde]-y[pv->index_pt_deltaV_prime_nlde]+3.*metric_euler*Vprime/k2+(psiprime-2.*metric_continuity/3)*V+2.*a*a*y[pv->index_pt_deltaU_nlde];
+          dy[pv->index_pt_deltaV_nlde]=y[pv->index_pt_deltaV_prime_nlde];
+          dy[pv->index_pt_deltaV_prime_nlde]=(5.*a_prime_over_a*a_prime_over_a+a*pvecback[pba->index_bg_H_prime]-k2/2.)*y[pv->index_pt_deltaV_nlde]-k2*y[pv->index_pt_deltaZ_prime_nlde]/2.+2.*a_prime_over_a*k2*y[pv->index_pt_deltaZ_nlde]+a*a*y[pv->index_pt_deltaU_prime_nlde]+a*a*metric_euler*Uprime/k2+Vprime*(psiprime-metric_continuity)+(metric_euler/2.-a_prime_over_a*(psiprime-3.*metric_continuity))*V;
+    }
+    
 
     /** - ---> metric */
 

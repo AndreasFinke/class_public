@@ -609,6 +609,8 @@ int input_read_parameters(
   class_read_double("model",pba->model);
   if (pba->model != 0)
       pba->has_nlde = _TRUE_;
+    
+  class_read_double("u0",pba->U_ini_nlde);
 
   /* scale factor today (arbitrary) */
   class_read_double("a_today",pba->a_today);
@@ -979,7 +981,7 @@ int input_read_parameters(
              errmsg);
 
 /**NonLocal: modified procedure in the presence of nonlocal dark energy*/
-  if(!(pba->model == 0.)){
+  if(!(pba->model == 0)){
       if((flag1 == _TRUE_) && (flag4 == _TRUE_)){/**NonLocal DE and cosmological constant specified then one infers Omega_cdm (useful for model comparison in MCMC), DE fluid and scalar field put to zero*/
             pba->Omega0_k = 0.;
             pba->K = 0.;
@@ -1003,12 +1005,12 @@ int input_read_parameters(
             pba->Omega0_nlde = 1.- Omega_tot - param1;
       }
       else if((flag1 == _FALSE_) && (flag4 == _FALSE_)){/**NonLocal: pure nonlocal DE and no cosmological constant, DE fluid and scalar field put to zero*/
-	pba->Omega0_k = 0.;
-	pba->K = 0.;
-	pba->sgnK = 0.;
-	pba->Omega0_fld= 0.;
-	pba->Omega0_scf= 0.;
-	pba->Omega0_nlde = 1.- Omega_tot;
+        pba->Omega0_k = 0.;
+	    pba->K = 0.;
+	    pba->sgnK = 0.;
+	    pba->Omega0_fld= 0.;
+	    pba->Omega0_scf= 0.;
+	    pba->Omega0_nlde = 1.- Omega_tot;
       }
   }
   else{

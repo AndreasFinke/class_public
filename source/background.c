@@ -836,10 +836,10 @@ int background_init(
      i_nl++;
      }
      };
-     if (i_nl < _MAXS_) {printf("after %d secant method steps of nonlocal model %f: gamma nonlocal = %.12e ,  final H = %e\n",i_nl, pba->model,pba->gnl,pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H]*_c_/1000.);                                                                                                                                                              
+     if (i_nl < _MAXS_) {printf("after %d secant method steps of nonlocal model %i: gamma nonlocal = %.12e ,  final H = %e\n",i_nl, pba->model,pba->gnl,pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H]*_c_/1000.);
      } 
      else {
-     printf("failed to converge after %d secant method steps of model %f, moving now to Newtonian\n",i_nl,pba->model);
+     printf("failed to converge after %d secant method steps of model %i, moving now to Newtonian\n",i_nl,pba->model);
      gnlm2=0;
      gnlm1=_GNL_HI_;
      i_nl=0;
@@ -857,7 +857,7 @@ int background_init(
      pba->error_message);
      i_nl++;
      };
-     printf("after %d newtonian method steps of R/Box^2 R model: gamma nonlocal = %.12e ,  final H/c [Mcp^{-1}] = %e\n",i_nl, pba->gnl,pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H]);
+     printf("after %d newtonian method steps: gamma nonlocal = %.12e ,  final H/c [Mcp^{-1}] = %e\n",i_nl, pba->gnl,pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H]);
      }
      }
     
