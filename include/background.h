@@ -61,11 +61,11 @@ struct background
     double gnl;/**gamma*/
     double Omega0_nlde; /**Nonlocal dark energy density fraction*/
     //**NonLocal: definition of background initial condition for auxiliary fields*/
+    double Minfl;
     double U_ini_nlde;
     double U_prime_ini_nlde;
     double V_ini_nlde;
     double V_prime_ini_nlde;
-    
     
   double Omega0_fld; /**< \f$ \Omega_{0 de} \f$: fluid */
 
@@ -169,6 +169,8 @@ struct background
   //@{
 
   double a_today; /**< scale factor today (arbitrary and irrelevant for most purposes) */
+
+
 
   //@}
 

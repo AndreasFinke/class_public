@@ -806,59 +806,56 @@ int background_init(
      int i_nl=0;
      double fm1,fm2;
      if (pba->has_nlde == _TRUE_) {
-     pba->gnl=gnlm2;
-     class_call(background_solve(ppr,pba),
-     pba->error_message,
-     pba->error_message);
-     fm2=((pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H])-(pba->H0))/(pba->H0);
-     pba->gnl=gnlm1;
-     class_call(background_solve(ppr,pba),
-                pba->error_message,
-                pba->error_message);
-     fm1=((pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H])-(pba->H0))/(pba->H0);
-     while ((fabs(fm1)>_TOLH_) && (i_nl<_MAXS_)) {
-     pba->gnl=(gnlm2*fm1-gnlm1*fm2)/(fm1-fm2);
-     if (background_solve(ppr,pba)){
-       i_nl = _MAXS_;
-       pba->gnl=_GNL_HI_/2.;
-       class_call(background_solve(ppr,pba),
-		  pba->error_message,
-		  pba->error_message);
-     }
-     else {
-     class_call(background_solve(ppr,pba),
-                pba->error_message,
-                pba->error_message);
-     gnlm2=gnlm1;
-     gnlm1=pba->gnl;
-     fm2=fm1;
-     fm1=((pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H])-(pba->H0))/(pba->H0);
-     i_nl++;
-     }
-     };
-     if (i_nl < _MAXS_) {printf("after %d secant method steps of nonlocal model %i: gamma nonlocal = %.12e ,  final H = %e\n",i_nl, pba->model,pba->gnl,pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H]*_c_/1000.);
-     } 
-     else {
-     printf("failed to converge after %d secant method steps of model %i, moving now to Newtonian\n",i_nl,pba->model);
-     gnlm2=0;
-     gnlm1=_GNL_HI_;
-     i_nl=0;
-     while ((fabs(((pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H])-(pba->H0))/(pba->H0))>_TOLH_) && (i_nl<_MAXS_)) {
-     if (pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H] > pba->H0){
-     gnlm1=pba->gnl;
-     pba->gnl=((pba->gnl)+gnlm2)/2.;
-     }
-     else if (pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H] < pba->H0){
-     gnlm2=pba->gnl;
-     pba->gnl=((pba->gnl)+gnlm1)/2.;
-     };
-     class_call(background_solve(ppr,pba),
-     pba->error_message,
-     pba->error_message);
-     i_nl++;
-     };
-     printf("after %d newtonian method steps: gamma nonlocal = %.12e ,  final H/c [Mcp^{-1}] = %e\n",i_nl, pba->gnl,pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H]);
-     }
+         pba->gnl=gnlm2;
+         class_call(background_solve(ppr,pba),
+         pba->error_message,
+         pba->error_message);
+         fm2=((pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H])-(pba->H0))/(pba->H0);
+         pba->gnl=gnlm1;
+         class_call(background_solve(ppr,pba),
+                    pba->error_message,
+                    pba->error_message);
+         fm1=((pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H])-(pba->H0))/(pba->H0);
+   /*      while ((fabs(fm1)>_TOLH_) && (i_nl<_MAXS_)) {
+             pba->gnl=(gnlm2*fm1-gnlm1*fm2)/(fm1-fm2);
+             if (background_solve(ppr,pba)){
+               i_nl = _MAXS_;
+               pba->gnl=_GNL_HI_/2.;
+               class_call(background_solve(ppr,pba), pba->error_message, pba->error_message);
+             }
+             else {
+                 class_call(background_solve(ppr,pba),     pba->error_message,      pba->error_message);
+                 gnlm2=gnlm1;
+                 gnlm1=pba->gnl;
+                 fm2=fm1;
+                 fm1=((pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H])-(pba->H0))/(pba->H0);
+                 i_nl++;
+             }
+         }; */
+         
+        // if (i_nl < _MAXS_) {printf("after %d secant method steps of nonlocal model %i: gamma nonlocal = %.12e ,  final H = %e\n",i_nl, pba->model,pba->gnl,pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H]*_c_/1000.);
+       //  }
+        // else {
+        // printf("failed to converge after %d secant method steps of model %i, moving now to Newtonian\n",i_nl,pba->model);
+         gnlm2=0;
+         gnlm1=_GNL_HI_;
+         i_nl=0;
+         while ((fabs(((pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H])-(pba->H0))/(pba->H0))>_TOLH_) && (i_nl<_MAXS_)) {
+             if (pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H] > pba->H0){
+                 gnlm1=pba->gnl;
+                 pba->gnl=((pba->gnl)+gnlm2)/2.;
+             }
+             else if (pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H] < pba->H0){
+                 gnlm2=pba->gnl;
+                 pba->gnl=((pba->gnl)+gnlm1)/2.;
+             };
+             class_call(background_solve(ppr,pba),
+             pba->error_message,
+             pba->error_message);
+             i_nl++;
+         };
+         printf("after %d newtonian method steps: gamma nonlocal = %.12e, gamma*H0^2= %.12e, final H = %e\n",i_nl, pba->gnl, pba->gnl*pba->H0*pba->H0, (pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H])*_c_/1000);
+         //}
      }
     
 /**NonLocal verbose part moved here from background_solve*/
@@ -1067,7 +1064,8 @@ int background_indices(
   class_define_index(pba->index_bg_rho_ncdm1,pba->has_ncdm,index_bg,pba->N_ncdm);
   class_define_index(pba->index_bg_p_ncdm1,pba->has_ncdm,index_bg,pba->N_ncdm);
   class_define_index(pba->index_bg_pseudo_p_ncdm1,pba->has_ncdm,index_bg,pba->N_ncdm);
-/**NonLocal: derivative of rho+p*/ class_define_index(pba->index_bg_rppdot_ncdm1,pba->has_ncdm,index_bg,pba->N_ncdm);
+    
+/**NonLocal: derivative of rho+p */ class_define_index(pba->index_bg_rppdot_ncdm1,pba->has_ncdm,index_bg,pba->N_ncdm);
 
   /* - index for dcdm */
   class_define_index(pba->index_bg_rho_dcdm,pba->has_dcdm,index_bg,1);

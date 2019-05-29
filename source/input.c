@@ -606,7 +606,7 @@ int input_read_parameters(
   pba->V_ini_nlde = 0.;
   pba->U_prime_ini_nlde = 0.;
 /**NonLocal: read model flag: 0 -> LCDM, 1 -> RT */
-  class_read_double("model",pba->model);
+  class_read_int("model",pba->model);
   if (pba->model != 0)
       pba->has_nlde = _TRUE_;
     
@@ -626,13 +626,83 @@ int input_read_parameters(
              errmsg,
              "In input file, you cannot enter both h and H0, choose one");
   if (flag1 == _TRUE_) {
+    printf("set H0\n");
     pba->H0 = param1 * 1.e3 / _c_;
     pba->h = param1 / 100.;
   }
   if (flag2 == _TRUE_) {
+    printf("set h\n");
     pba->H0 = param2 *  1.e5 / _c_;
     pba->h = param2;
   }
+
+  /* Nonlocal: inflation ICs */
+  pba->Minfl = 1e-8; // default inflation mass scale in GeV chosen to give deltaN < 10
+  class_read_double("Minfl", pba->Minfl);
+  double deltaN = 64. - log(1e16/pba->Minfl); // min number of efolds for inflation to solve issues
+  class_read_double("a_ini_over_a_today_default", ppr->a_ini_over_a_today_default);
+
+  if (deltaN > 10) {
+    /* 100 km/s/Mpc in CLASS units of 1/Mpc */
+    const double hundred = 1e5/_c_;
+    /* Planck mass measured in GeV */
+    const double MPl = 1.2209e+19;
+    /* Planck length measured in Mpc */
+    const double lPl = 5.18525e-58;
+     
+    /* Hubble at mass of inflation Minfl[GeV], again in 1/Mpc */
+    double Hinfl = sqrt(8.*_PI_/3.)/lPl*(pba->Minfl/MPl)*(pba->Minfl/MPl);
+      
+    /* omegar fixed from CMB temperature and assuming T_ncdm = (4/11)^(1/3) = 0.713766..., which is not exactly the default value of CLASS = 0.71611. We ignore this mismatch. In principle, a mismatch means that that the Hubble rate in the EoM and the Hubble rate we use here for the ICs do not agree. This effectively changes the precise model of inflation used, in a way that even depends on the choice of how the integration variables. (For example, the U,V variables used here would yield a different result from the U,Y variables appearing in many papers of the RT model, since there are is a change in the occurence of factors of Hubble in the ICs)
+     We can of course neglect this tiny difference because the model is a only a rough proxy. One may however note that here no late-time cosmological parameters (in particular H0) enter here; the physics here is already fixed early (e.g. at the end of inflation the V field with dimensions of time is proportional to the inverse Hubble rate at that time). The fact that H0 does appears explicitely in the EoM even at early times is just related to the definition of the  pba->gnl parameter (which is essentially the nonlocal mass parameter^2 made dimensionless using 1/H0^2, which is undone in the EoM). */
+      
+    const double omegar = 4.18343e-5;
+      
+    /* Hinfl^2 = H0^2 Omega_r / a_end^4, but H0^2 Omega_r = 100 h^2 omegar */
+    double xend = 0.25*log(omegar)-0.5*log(Hinfl/hundred);
+      
+    /* instantaneous reheating model from dS to RD; leads to continuous derivatives of all fields considered and the following mode amplitudes */
+      
+    double xstart = log(ppr->a_ini_over_a_today_default);
+    
+    /* natural initial amplitude of mode before inflation */
+    double a1 = 1.;
+      
+    
+    const double c1 = -a1*(2+sqrt(13.)+sqrt(21.))/sqrt(13.)/(sqrt(13.)-1);
+    const double c2 = c1*(1+sqrt(13.))/2;
+    const double d1 = -a1*(2-sqrt(13.)+sqrt(21.))/sqrt(13.)/(sqrt(13.)+1);
+    const double d2 = d1*(1-sqrt(13.))/2;
+      
+    pba->U_ini_nlde = 4.*deltaN;
+    pba->U_prime_ini_nlde = 0.;
+      
+    pba->V_ini_nlde = (c1/Hinfl)*exp((sqrt(21.)-3)/2*deltaN+(sqrt(13.)-1)/2*(xstart-xend)+xstart)+(d1/Hinfl)*exp((sqrt(21.)-3)/2*deltaN-(sqrt(13.)+1)/2*(xstart-xend)+xstart);
+    pba->V_prime_ini_nlde = c2*exp((sqrt(21.)-3)/2*deltaN+(sqrt(13.)-5)/2*(xstart-xend)+2*xstart)+d2*exp((sqrt(21.)-3)/2*deltaN-(sqrt(13.)+5)/2*(xstart-xend)+2*xstart);
+      
+  }
+  /*    double Hinfl = 1.0e56 / 9 * pba->H0 * exp(-128 + 2*pba->deltaN_NL); 
+
+      //double xend = 0.62623 - pba->deltaN_NL + log(9.265e-5)/4;
+      double xend = 0.62623 -deltaN_NL + log(8.76761e-5)/4;
+
+      double xstart = log(ppr->a_ini_over_a_today_default);
+      
+      double a1 = 1;
+      double c1 = -a1 * (2+sqrt(13.)+sqrt(21.))/ ( sqrt(13.)*(sqrt(13.)-1) ); 
+      double c2 = c1 * (1+sqrt(13.))*0.5;
+      double d1 = -a1 * (2-sqrt(13.)+sqrt(21.))/ ( sqrt(13.)*(sqrt(13.)-1) ); 
+      double d2 = d1 * (1-sqrt(13.))*0.5;
+
+      pba->U_ini_nlde = 4*pba->deltaN_NL;
+      pba->U_prime_ini_nlde = 0;
+
+      pba->V_ini_nlde = (c1/Hinfl)*exp((sqrt(21.)-3)/2*pba->deltaN_NL+(sqrt(13.)-1)/2*(xstart-xend)+xstart)+(d1/Hinfl)*exp((sqrt(21.)-3)/2*pba->deltaN_NL-(sqrt(13.)+1)/2*(xstart-xend)+xstart);
+      pba->V_prime_ini_nlde = c2*exp((sqrt(21.)-3)/2*pba->deltaN_NL+(sqrt(13.)-5)/2*(xstart-xend)+2*xstart)+d2*exp((sqrt(21.)-3)/2*pba->deltaN_NL-(sqrt(13.)+5)/2*(xstart-xend)+2*xstart);
+    printf("Hubble and reduced Hubble parameters: you have H0=%f/Mpc=%fkm/s/Mpc, but h=%f",pba->H0,pba->H0/1.e3* _c_,pba->h);
+  }`
+*/
+  
 
   /** - Omega_0_g (photons) and T_cmb */
   class_call(parser_read_double(pfc,"T_cmb",&param1,&flag1,errmsg),
@@ -2602,7 +2672,6 @@ int input_read_parameters(
 
   /** - (h.1.) parameters related to the background */
 
-  class_read_double("a_ini_over_a_today_default",ppr->a_ini_over_a_today_default);
   class_read_double("back_integration_stepsize",ppr->back_integration_stepsize);
   class_read_double("tol_background_integration",ppr->tol_background_integration);
   class_read_double("tol_initial_Omega_r",ppr->tol_initial_Omega_r);
@@ -2997,7 +3066,7 @@ int input_default_params(
      0.67556. Hence, we take h=0.67556, N_ur=3.046, N_ncdm=0, and all
      other parameters from the Planck2013 Cosmological Parameter
      paper. */
-
+  
   pba->h = 0.67556;
   pba->H0 = pba->h * 1.e5 / _c_;
   pba->T_cmb = 2.7255;
