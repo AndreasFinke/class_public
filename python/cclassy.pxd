@@ -55,6 +55,11 @@ cdef extern from "class.h":
         double Omega0_cdm
         double Omega0_dcdm
         double Omega0_ncdm_tot
+
+## NONLOCAL nonlocal NonLocal 
+        double Omega0_nlde
+        double gnl
+
         double Omega0_lambda
         double Omega0_fld
         double w0_fld

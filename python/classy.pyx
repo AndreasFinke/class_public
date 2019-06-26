@@ -1019,6 +1019,16 @@ cdef class Class:
     #def Omega_r(self):
     #    return self.ba.Omega0_g+self.ba.Omega0_ur
 
+
+###### NONLOCAL nonlocal nonLocal #### 
+    def Omega_nlde(self): 
+        return self.ba.Omega0_nlde 
+
+    def gnl(self):
+        return self.ba.gnl
+######################################
+
+
     def Omega_Lambda(self):
         return self.ba.Omega0_lambda
 
@@ -1575,6 +1585,12 @@ cdef class Class:
                 value = self.ba.h*100
             elif name == 'Omega0_lambda' or name == 'Omega_Lambda':
                 value = self.ba.Omega0_lambda
+###### NONLOCAL nonlocal NonLocal ##
+            elif name == 'Omega0_nlde' or name == 'Omega_nlde':
+                value = self.ba.Omega0_nlde
+            elif name == 'gnl':
+                value = self.ba.gnl
+####################
             elif name == 'Omega0_fld':
                 value = self.ba.Omega0_fld
             elif name == 'age':

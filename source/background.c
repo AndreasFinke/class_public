@@ -807,11 +807,13 @@ int background_init(
      double fm1,fm2;
      if (pba->has_nlde == _TRUE_) {
          pba->gnl=gnlm2;
+	 background_free_noinput(pba);
          class_call(background_solve(ppr,pba),
          pba->error_message,
          pba->error_message);
          fm2=((pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H])-(pba->H0))/(pba->H0);
          pba->gnl=gnlm1;
+         background_free_noinput(pba);
          class_call(background_solve(ppr,pba),
                     pba->error_message,
                     pba->error_message);
@@ -849,12 +851,15 @@ int background_init(
                  gnlm2=pba->gnl;
                  pba->gnl=((pba->gnl)+gnlm1)/2.;
              };
+	     background_free_noinput(pba);
              class_call(background_solve(ppr,pba),
              pba->error_message,
              pba->error_message);
              i_nl++;
          };
-         printf("after %d newtonian method steps: gamma nonlocal = %.12e, gamma*H0^2= %.12e, final H = %e\n",i_nl, pba->gnl, pba->gnl*pba->H0*pba->H0, (pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H])*_c_/1000);
+    	if (pba->background_verbose > 0) {
+       	  printf("after %d newtonian method steps: gamma nonlocal = %.12e, gamma*H0^2= %.12e, final H = %e\n",i_nl, pba->gnl, pba->gnl*pba->H0*pba->H0, (pba->background_table[(pba->bg_size)*(pba->bt_size - 1)+pba->index_bg_H])*_c_/1000);
+	}
          //}
      }
     

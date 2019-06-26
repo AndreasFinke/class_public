@@ -626,12 +626,10 @@ int input_read_parameters(
              errmsg,
              "In input file, you cannot enter both h and H0, choose one");
   if (flag1 == _TRUE_) {
-    printf("set H0\n");
     pba->H0 = param1 * 1.e3 / _c_;
     pba->h = param1 / 100.;
   }
   if (flag2 == _TRUE_) {
-    printf("set h\n");
     pba->H0 = param2 *  1.e5 / _c_;
     pba->h = param2;
   }
