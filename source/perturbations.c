@@ -148,7 +148,7 @@ int perturb_init(
       printf("Computing sources\n");
   }
 
-    
+ 
   /**NonLocal*/
   class_test((ppt->gauge == synchronous) && (pba->has_nlde == _TRUE_), ppt->error_message,
                "Nonlocal perturbations not implemented in synchronous gauge. Use newtonian gauge.");
@@ -254,6 +254,7 @@ int perturb_init(
       break;
     }
   }
+    
 
   /** - initialize all indices and lists in perturbs structure using perturb_indices_of_perturbs() */
 
@@ -294,9 +295,8 @@ int perturb_init(
              ppt->error_message);
 
   /** - if we want to store perturbations, write titles and allocate storage */
-  class_call(perturb_prepare_output(pba,ppt),
-             ppt->error_message,
-             ppt->error_message);
+  class_call(perturb_prepare_output(pba,ppt), ppt->error_message,
+          ppt->error_message);
 
 
   /** - create an array of workspaces in multi-thread case */
@@ -2557,7 +2557,7 @@ int perturb_prepare_output(struct background * pba,
 /**NonLocal*/
       class_store_columntitle(ppt->scalar_titles,"dU_nlde",pba->has_nlde);
       class_store_columntitle(ppt->scalar_titles,"dV_nlde",pba->has_nlde);
-      if(pba->model == 2.) class_store_columntitle(ppt->scalar_titles,"dZ_nlde",pba->has_nlde);
+      if(pba->model == RT) class_store_columntitle(ppt->scalar_titles,"dZ_nlde",pba->has_nlde);
       /* Scalar field scf */
       class_store_columntitle(ppt->scalar_titles, "delta_scf", pba->has_scf);
       class_store_columntitle(ppt->scalar_titles, "theta_scf", pba->has_scf);
