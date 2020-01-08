@@ -5220,7 +5220,7 @@ int perturb_einstein(
          second equation below (credits to Guido Walter Pettinari). */
 
 /**NonLocal* modified einstein equations 0i and ij offd*/
-      if (pba->model == 0.){
+      if (pba->model == LCDM){
       /* equation for psi */
       ppw->pvecmetric[ppw->index_mt_psi] = y[ppw->pv->index_pt_phi] - 4.5 * (a2/k2) * ppw->rho_plus_p_shear;
 

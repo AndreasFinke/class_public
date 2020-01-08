@@ -651,8 +651,8 @@ int input_read_parameters(
     /* Hubble at mass of inflation Minfl[GeV], again in 1/Mpc */
     double Hinfl = sqrt(8.*_PI_/3.)/lPl*(pba->Minfl/MPl)*(pba->Minfl/MPl);
       
-    /* omegar fixed from CMB temperature and assuming T_ncdm = (4/11)^(1/3) = 0.713766..., which is not exactly the default value of CLASS = 0.71611. We ignore this mismatch. In principle, a mismatch means that that the Hubble rate in the EoM and the Hubble rate we use here for the ICs do not agree. This effectively changes the precise model of inflation used, in a way that even depends on the choice of how the integration variables. (For example, the U,V variables used here would yield a different result from the U,Y variables appearing in many papers of the RT model, since there are is a change in the occurence of factors of Hubble in the ICs)
-     We can of course neglect this tiny difference because the model is a only a rough proxy. One may however note that here no late-time cosmological parameters (in particular H0) enter here; the physics here is already fixed early (e.g. at the end of inflation the V field with dimensions of time is proportional to the inverse Hubble rate at that time). The fact that H0 does appears explicitely in the EoM even at early times is just related to the definition of the  pba->gnl parameter (which is essentially the nonlocal mass parameter^2 made dimensionless using 1/H0^2, which is undone in the EoM). */
+    /* omegar fixed from CMB temperature and assuming T_ncdm = (4/11)^(1/3) = 0.713766..., which is not exactly the default value of CLASS = 0.71611. We ignore this mismatch. In principle, a mismatch means that that the Hubble rate in the EoM and the Hubble rate we use here for the ICs do not agree. This effectively changes the precise model of inflation used, in a way that even depends on the choice of the integration variables. (For example, the U,V variables used here would yield a different result from the U,Y variables appearing in many papers of the RT model, since there is a change in the occurence of factors of Hubble in the ICs)
+     We can of course neglect this tiny difference because the model is a only a rough proxy. One may however note that no late-time cosmological parameters (in particular H0) enter here; the physics here is already fixed early (e.g. at the end of inflation the V field with dimensions of time is proportional to the inverse Hubble rate at that time). The fact that H0 does appears explicitely in the EoM even at early times is just related to the definition of the  pba->gnl parameter (which is essentially the nonlocal mass parameter^2 made dimensionless using 1/H0^2, which is undone in the EoM). */
       
     const double omegar = 4.18343e-5;
       
@@ -678,6 +678,7 @@ int input_read_parameters(
     pba->V_ini_nlde = (c1/Hinfl)*exp((sqrt(21.)-3)/2*deltaN+(sqrt(13.)-1)/2*(xstart-xend)+xstart)+(d1/Hinfl)*exp((sqrt(21.)-3)/2*deltaN-(sqrt(13.)+1)/2*(xstart-xend)+xstart);
     pba->V_prime_ini_nlde = c2*exp((sqrt(21.)-3)/2*deltaN+(sqrt(13.)-5)/2*(xstart-xend)+2*xstart)+d2*exp((sqrt(21.)-3)/2*deltaN-(sqrt(13.)+5)/2*(xstart-xend)+2*xstart);
       
+    printf(" H0 = %f \n Uin = %f, Uindot = %f\n Vin = %f, Vindot = %f", pba->H0/hundred*100, pba->U_ini_nlde, pba->U_prime_ini_nlde, pba->V_ini_nlde, pba->V_prime_ini_nlde)
   }
   /*    double Hinfl = 1.0e56 / 9 * pba->H0 * exp(-128 + 2*pba->deltaN_NL); 
 

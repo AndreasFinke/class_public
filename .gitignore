@@ -1,5 +1,6 @@
 output/
-*~
+notebooks/
+*
 build/
 class
 *.prof
@@ -11,3 +12,8 @@ python/classy.c
 python/build/
 RealSpaceInterface/cache/
 .DS_Store
+notebooks/
+*.dsym
+Makefile
+.gitignore
+explanatory.ini
