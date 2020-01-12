@@ -1,6 +1,5 @@
 output/
-notebooks/
-*
+*~
 build/
 class
 *.prof
@@ -17,3 +16,5 @@ notebooks/
 Makefile
 .gitignore
 explanatory.ini
+doc/manual/html
+doc/manual/latex
