@@ -6,9 +6,11 @@ It is based on https://github.com/dirian/class_public/tree/nonlocal .
 
 New parameters:
 
-model = 0, 1 (LCDM, RT)
-Minfl = .... (e.g. Minfl = 1e16) : energy scale of inflation 
-deltaN = ... (e.g. deltaN = 80) number of e-folds of inflation
+- model = 0, 1 (LCDM, RT)
+
+- Minfl = .... (e.g. Minfl = 1e16) : energy scale of inflation 
+
+- deltaN = ... (e.g. deltaN = 80) number of e-folds of inflation
 
 The last parameter is chosen automatically depending on Minfl if not specified. If Minfl is not specfifed, and model = 1, the model is the minimal RT model with ICs set in radiation dominance. 
 
