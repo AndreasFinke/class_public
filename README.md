@@ -1,8 +1,9 @@
 RT - CLASS 
 ===========
 
-This is an implementation of the RT cosmological models in the lastest version of CLASS 2.8.
-It is based on https://github.com/dirian/class_public/tree/nonlocal .
+This is an implementation of the RT cosmological models in the lastest version of CLASS 2.8. Version 2.7 is available as a branch, if needed. 
+
+This project is heavily based on https://github.com/dirian/class_public/tree/nonlocal .
 
 New parameters:
 
